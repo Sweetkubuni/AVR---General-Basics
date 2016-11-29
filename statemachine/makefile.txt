@@ -1,0 +1,32 @@
+# Justin Kubuni
+# Attiny85 makefile template
+
+DEVICE = attiny85
+CLOCK = 1000000
+PROGRAMMER = arduino
+FILENAME = statemachine
+vpath = D:\AVR\statemachine
+COMPILE = avr-gcc -Wall -Os -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
+
+all: clean build upload
+
+build:
+	$(COMPILE) -c SN74LS47.c -o SN74LS47.o
+	$(COMPILE) -c $(FILENAME).c -o $(FILENAME).o
+	$(COMPILE) -o $(FILENAME).elf $(FILENAME).o SN74LS47.o
+	avr-objcopy -j .text -j .data -O ihex $(FILENAME).elf $(FILENAME).hex
+	avr-size --format=avr --mcu=$(DEVICE) $(FILENAME).elf
+
+upload:
+	avrdude -v -c usbtiny -p t85 -U flash:w:$(FILENAME).hex:i
+
+# http://www.engbedded.com/fusecalc/
+reset_fuse:
+	avrdude -v -c usbtiny -p t85 -U lfuse:w:0x62:m
+	avrdude -v -c usbtiny -p t85 -U hfuse:w:0xdf:m
+	avrdude -v -c usbtiny -p t85 -U efuse:w:0xff:m
+clean:
+	del $(FILENAME).o
+	del SN74LS47.o
+	del $(FILENAME).hex
+	del $(FILENAME).elf
